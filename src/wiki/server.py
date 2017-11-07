@@ -36,6 +36,7 @@ def create_web_app(backend):
     revisions = await backend.revisions(title)
 
     if revisions:
+      revisions.sort(key=lambda rev: rev)
       doc = await backend.document_at(title, revisions[-1])
       return web.json_response(doc)
 

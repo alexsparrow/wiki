@@ -3,6 +3,9 @@ import datetime
 from .backend import WikiBackend
 
 class InMemoryBackend(WikiBackend):
+  """
+  This is just a basic in-memory backend I used for some of the tests.
+  """
   def __init__(self, data):
     self._data = data
 

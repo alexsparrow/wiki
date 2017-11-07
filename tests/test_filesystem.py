@@ -39,6 +39,11 @@ async def test_revisions(cli):
   data = await resp.json()
   assert len(data) == 2
 
+  resp = await cli.get("/documents/test/latest")
+  assert resp.status == 200
+  data = await resp.json()
+  assert data == "goodbye"
+
 
 
 

@@ -6,6 +6,9 @@ import datetime
 from .backend import WikiBackend
 
 class FileSystemBackend(WikiBackend):
+  """
+  This is the real backend using the filesystem. Documents are stored under <path>/<title>/<timestamp>.
+  """
   def __init__(self, path, loop):
     if not os.path.exists(path):
       os.makedirs(path)
