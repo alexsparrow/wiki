@@ -18,31 +18,42 @@ class FileSystemBackend(WikiBackend):
   def _revision_path(self, title, revision):
     return os.path.join(self._path, title, str(revision))
 
+  async def _path_exists(self, path):
+    # This is IO so in principle I think it can block :-(
+    return await self._run_blocking(lambda: os.path.exists(path))
+
+  async def _run_blocking(self, func):
+    return await self._loop.run_in_executor(None, func)
+
   async def documents(self):
-    return await self._loop.run_in_executor(None, lambda: os.listdir(self._path))
+    return await self._run_blocking(lambda: os.listdir(self._path))
 
   async def revisions(self, title):
     path = self._document_path(title)
-    if not os.path.exists(path):
+    if not await self._path_exists(path):
       return None
-    return await self._loop.run_in_executor(None, lambda: [rev for rev in os.listdir(path)])
+    return await self._run_blocking(lambda: [rev for rev in os.listdir(path)])
 
   async def document_at(self, title, revision):
     path = self._revision_path(title, revision)
 
-    if not os.path.exists(path):
+    if not await self._path_exists(path):
       return None
 
-    return await self._loop.run_in_executor(None, lambda: open(path).read())
+    return await self._run_blocking(lambda: open(path).read())
 
   async def add(self, title, text):
     timestamp = datetime.datetime.now().timestamp()
 
     document_path = self._document_path(title)
-    if not os.path.exists(document_path):
-      os.makedirs(document_path)
+
+    def _make_dirs():
+      if not os.path.exists(document_path):
+        os.makedirs(document_path)
+
+    await self._run_blocking(_make_dirs)
 
     revision_path = self._revision_path(title, timestamp)
-    await self._loop.run_in_executor(None, lambda: open(revision_path, "w").write(text))
+    await self._run_blocking(lambda: open(revision_path, "w").write(text))
 
     return timestamp
